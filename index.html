@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>🍓 딸기구름 카페 - 나만의 카페 운영 게임</title>
+<!-- 귀엽고 가독성 좋은 한글 폰트 (오프라인이면 시스템 폰트로 대체) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   1. 기본 테마 / 색상 변수
+   ========================================================= */
+:root{
+  --cream:#fff8f0; --cream2:#fff1e4; --pink:#ffe1ea; --pink2:#ffc9d8;
+  --berry:#ff5c8a; --berry-d:#e8436f; --coral:#ff8a7a; --brown:#7a4b3a; --brown-l:#a8725c;
+  --gold:#f5b942; --mint:#7fd1b9; --text:#5a3a2e; --muted:#a88b80;
+  --shadow:0 6px 18px rgba(201,120,130,.18); --shadow-s:0 3px 8px rgba(201,120,130,.18);
+  --r:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Gowun Dodum','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 10% 10%, #ffe6ee 0 120px, transparent 121px),
+    radial-gradient(circle at 90% 80%, #ffeede 0 160px, transparent 161px),
+    linear-gradient(180deg,var(--cream),#ffeef3);
+  background-attachment:fixed;
+  min-height:100%;
+  overflow-x:hidden;
+}
+h1,h2,h3,.jua,button{font-family:'Jua','Gowun Dodum',sans-serif;font-weight:400}
+button{border:none;cursor:pointer;color:inherit;font-size:inherit}
+
+/* =========================================================
+   2. 공통 버튼 (둥근 모서리 + 부드러운 그림자 + 눌림 피드백)
+   ========================================================= */
+.btn{
+  position:relative;overflow:hidden;
+  padding:11px 18px;border-radius:999px;
+  background:#fff;color:var(--brown);
+  box-shadow:var(--shadow-s);font-size:15px;
+  transition:transform .12s, box-shadow .12s, background .2s;
+  min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  user-select:none;
+}
+.btn:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.btn:active{transform:scale(.94)}
+.btn.primary{background:linear-gradient(135deg,var(--berry),var(--coral));color:#fff}
+.btn.gold{background:linear-gradient(135deg,#ffd36e,var(--gold));color:#6b4300}
+.btn.brown{background:linear-gradient(135deg,var(--brown-l),var(--brown));color:#fff}
+.btn.mint{background:linear-gradient(135deg,#a6e8d4,var(--mint));color:#24584a}
+.btn.ghost{background:var(--cream2);box-shadow:none}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;filter:grayscale(.4)}
+.btn.sm{padding:7px 12px;min-height:34px;font-size:13px}
+.btn.big{padding:15px 26px;font-size:18px}
+.ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.6);transform:scale(0);animation:ripple .55s ease-out;pointer-events:none}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+
+/* =========================================================
+   3. 헤더 (카페 이름, 코인, 레벨/경험치, 오늘 매출, 손님 수)
+   ========================================================= */
+header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,248,240,.92);backdrop-filter:blur(8px);
+  border-bottom:2px dashed var(--pink2);
+  padding:10px 16px;
+}
+.head-row{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+.logo-badge{
+  width:48px;height:48px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fff 0 18%,transparent 19%),linear-gradient(135deg,var(--berry),var(--coral));
+  display:grid;place-items:center;font-size:26px;box-shadow:var(--shadow-s);border:3px solid #fff;
+  animation:bob 3s ease-in-out infinite;
+}
+@keyframes bob{50%{transform:translateY(-3px) rotate(-5deg)}}
+.logo h1{font-size:22px;color:var(--berry-d);line-height:1.1}
+.logo small{font-size:12px;color:var(--muted);display:block}
+.stats{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;align-items:center}
+.chip{
+  background:#fff;border-radius:999px;padding:6px 12px;box-shadow:var(--shadow-s);
+  display:flex;align-items:center;gap:6px;font-size:14px;white-space:nowrap
+}
+.chip b{font-family:'Jua';font-weight:400;font-size:16px}
+.chip.coin b{color:#c98a00}
+.lvl-chip{min-width:150px}
+.expbar{flex:1;height:9px;border-radius:9px;background:var(--pink);overflow:hidden;min-width:60px}
+.expbar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--berry));border-radius:9px;transition:width .5s}
+.icon-btn{width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:var(--shadow-s);font-size:18px;display:grid;place-items:center;transition:transform .12s}
+.icon-btn:active{transform:scale(.88)}
+.open-dot{width:9px;height:9px;border-radius:50%;background:#ccc;display:inline-block}
+.open-dot.on{background:#4fd18b;box-shadow:0 0 0 3px #c9f5dc;animation:pulse 1.4s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(79,209,139,.15)}}
+
+/* =========================================================
+   4. 탭 네비게이션 (PC: 상단 / 모바일: 하단 고정)
+   ========================================================= */
+nav.tabs{max-width:1180px;margin:14px auto 0;padding:0 16px;display:flex;gap:8px;overflow-x:auto}
+.tab{
+  flex:1;min-width:92px;padding:10px 8px;border-radius:16px;background:#fff;box-shadow:var(--shadow-s);
+  display:flex;flex-direction:column;align-items:center;gap:2px;font-size:14px;position:relative;
+  transition:transform .15s,background .2s;
+}
+.tab .ti{font-size:22px}
+.tab.active{background:linear-gradient(135deg,var(--berry),var(--coral));color:#fff;transform:translateY(-2px)}
+.tab:active{transform:scale(.93)}
+.tab .badge{position:absolute;top:4px;right:10px;background:var(--gold);color:#5b3a00;font-size:11px;border-radius:999px;padding:1px 6px;font-family:'Jua'}
+
+main{max-width:1180px;margin:0 auto;padding:16px 16px 40px}
+.screen{display:none}
+.screen.active{display:block;animation:screenIn .38s cubic-bezier(.2,.8,.3,1.2)}
+@keyframes screenIn{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+
+.panel{background:rgba(255,255,255,.88);border-radius:var(--r);box-shadow:var(--shadow);padding:18px}
+.panel h2{font-size:21px;color:var(--brown);margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.panel h2 .sub{font-family:'Gowun Dodum';font-size:13px;color:var(--muted)}
+.grid{display:grid;gap:14px}
+.muted{color:var(--muted);font-size:13px}
+
+/* =========================================================
+   5. 메인 카페 화면 (카페 내부 씬)
+   ========================================================= */
+.cafe-layout{display:grid;grid-template-columns:1fr 300px;gap:16px}
+.scene{
+  position:relative;border-radius:24px;overflow:hidden;height:440px;box-shadow:var(--shadow);
+  border:5px solid #fff;
+}
+.scene .wall{position:absolute;inset:0 0 34% 0;transition:background .5s}
+.scene .floor{position:absolute;left:0;right:0;bottom:0;height:34%;transition:background .5s;border-top:6px solid rgba(122,75,58,.25)}
+.sign{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  background:#fff;padding:6px 18px;border-radius:14px;box-shadow:var(--shadow-s);
+  font-family:'Jua';color:var(--berry-d);font-size:17px;white-space:nowrap;border:2px solid var(--pink2)
+}
+.sign .open-tag{font-size:12px;margin-left:6px;padding:2px 8px;border-radius:999px;background:#eee;color:#888}
+.sign .open-tag.on{background:#d8f7e6;color:#279b5c}
+.window{position:absolute;top:58px;left:5%;width:110px;height:90px;border-radius:50px 50px 8px 8px;background:linear-gradient(#bfe7ff,#e8f7ff);border:6px solid #fff;box-shadow:inset 0 0 0 3px #f3d9cc}
+.window::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:5px;background:#fff;transform:translateX(-50%)}
+.window .cloud{position:absolute;font-size:22px;top:20px;animation:drift 9s linear infinite}
+@keyframes drift{from{left:-30px}to{left:110px}}
+.deco-light{position:absolute;top:0;left:36%;font-size:34px;transform-origin:top center;animation:swing 3s ease-in-out infinite;filter:drop-shadow(0 6px 10px rgba(255,210,100,.7))}
+.deco-light::before{content:"";position:absolute;left:50%;top:-40px;width:2px;height:40px;background:#a8725c}
+.deco-light.l2{left:64%}
+@keyframes swing{50%{transform:rotate(6deg)}}
+.deco-wall{position:absolute;top:66px;right:6%;font-size:46px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.12))}
+.deco-plant{position:absolute;bottom:22%;right:2%;font-size:58px;z-index:3;filter:drop-shadow(0 6px 4px rgba(0,0,0,.15))}
+.counter{
+  position:absolute;left:3%;bottom:30%;width:170px;height:78px;z-index:2;
+  background:linear-gradient(#c58a6c,#9c654d);border-radius:14px 14px 6px 6px;box-shadow:0 8px 0 #7a4b3a;
+}
+.counter::before{content:"";position:absolute;top:-10px;left:-6px;right:-6px;height:16px;background:#ffe1ea;border-radius:10px;box-shadow:0 3px 0 #f2b9c9}
+.counter .machine{position:absolute;top:-52px;left:14px;font-size:38px}
+.counter .barista{position:absolute;top:-64px;left:76px;font-size:48px;animation:bob 2.4s ease-in-out infinite}
+.counter .cake{position:absolute;top:-34px;right:6px;font-size:26px}
+.counter .label{position:absolute;bottom:10px;left:0;right:0;text-align:center;color:#fff;font-family:'Jua';font-size:14px;opacity:.9}
+
+.seats{
+  position:absolute;left:40%;right:9%;bottom:6%;top:40%;
+  display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;gap:6px 10px;z-index:4
+}
+.seat{position:relative;display:flex;align-items:flex-end;justify-content:center;cursor:pointer}
+.seat .table{
+  position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
+  width:62px;height:16px;border-radius:50%;box-shadow:0 5px 0 rgba(0,0,0,.18);
+}
+.seat .table::after{content:"";position:absolute;left:50%;top:10px;width:8px;height:22px;transform:translateX(-50%);background:inherit;filter:brightness(.8);border-radius:3px;z-index:-1}
+.seat .chair{position:absolute;bottom:2px;left:2px;font-size:26px}
+.seat .guest{position:relative;font-size:40px;bottom:14px;animation:enter .6s cubic-bezier(.3,1.6,.5,1)}
+.seat.empty .guest{display:none}
+.seat .bubble{
+  position:absolute;bottom:62px;left:50%;transform:translateX(-50%);
+  background:#fff;border-radius:14px;padding:3px 7px 6px;box-shadow:var(--shadow-s);
+  display:flex;flex-direction:column;align-items:center;min-width:54px;z-index:5;animation:pop .4s
+}
+.seat .bubble::after{content:"";position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#fff;border-bottom:0}
+.seat.empty .bubble{display:none}
+.seat.selected .bubble{outline:3px solid var(--berry)}
+.seat .regular{position:absolute;top:-6px;right:-6px;font-size:14px}
+@keyframes enter{0%{transform:translateY(30px) scale(.3);opacity:0}100%{transform:none;opacity:1}}
+@keyframes pop{0%{transform:translateX(-50%) scale(.3)}70%{transform:translateX(-50%) scale(1.1)}100%{transform:translateX(-50%) scale(1)}}
+.leave-happy{animation:leaveUp .9s forwards!important}
+.leave-sad{animation:leaveShake .9s forwards!important}
+@keyframes leaveUp{30%{transform:translateY(-12px) scale(1.15)}100%{transform:translateY(-60px);opacity:0}}
+@keyframes leaveShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}100%{transform:translateX(40px);opacity:0}}
+
+.patbar{width:46px;height:6px;border-radius:6px;background:#f2e3dc;overflow:hidden;margin-top:3px}
+.patbar i{display:block;height:100%;background:#4fd18b;border-radius:6px;transition:width .25s linear,background .3s}
+
+.side .panel+.panel{margin-top:14px}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:var(--cream2);border-radius:16px;padding:12px;text-align:center}
+.stat .v{font-family:'Jua';font-size:22px;color:var(--berry-d)}
+.stat .k{font-size:12px;color:var(--muted)}
+.actions{display:flex;flex-direction:column;gap:10px}
+.closed-hint{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;
+  background:rgba(255,248,240,.55);backdrop-filter:blur(1.5px);z-index:10;
+}
+.closed-hint .card{background:#fff;padding:18px 24px;border-radius:20px;box-shadow:var(--shadow);text-align:center}
+
+/* =========================================================
+   6. 컵 / 디저트 일러스트 (CSS로 그린 음료)
+   ========================================================= */
+.cup{position:relative;width:44px;height:52px;display:inline-block;flex-shrink:0}
+.cup .cup-body{position:absolute;bottom:0;left:3px;width:32px;height:38px;background:#fff;border:2px solid #edd5c8;border-radius:4px 4px 13px 13px;overflow:hidden}
+.cup .liquid{position:absolute;left:0;right:0;bottom:0;height:72%;border-radius:0 0 10px 10px}
+.cup .liquid::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:rgba(255,255,255,.35)}
+.cup .cup-handle{position:absolute;right:1px;top:21px;width:11px;height:15px;border:3px solid #edd5c8;border-left:none;border-radius:0 9px 9px 0}
+.cup .cup-top{position:absolute;top:-2px;left:50%;transform:translateX(-62%);font-size:15px;line-height:1;z-index:2}
+.cup .straw{position:absolute;bottom:26px;left:20px;width:4px;height:24px;background:repeating-linear-gradient(#ff8fab 0 4px,#fff 4px 8px);transform:rotate(12deg);border-radius:2px}
+.dessert{display:inline-block;font-size:38px;line-height:52px;width:44px;text-align:center;flex-shrink:0;filter:drop-shadow(0 3px 2px rgba(0,0,0,.12))}
+.mini .cup{transform:scale(.62);transform-origin:center;margin:-10px -8px}
+.mini .dessert{font-size:24px;line-height:30px;width:30px}
+.huge .cup{transform:scale(2.3);margin:40px 30px}
+.huge .dessert{font-size:100px;line-height:120px;width:120px}
+
+/* =========================================================
+   7. 음료 제조 화면
+   ========================================================= */
+.brew-layout{display:grid;grid-template-columns:290px 1fr;gap:16px}
+.orders{display:flex;flex-direction:column;gap:10px;max-height:560px;overflow-y:auto;padding:4px}
+.order{
+  display:flex;gap:10px;align-items:center;background:#fff;border-radius:18px;padding:10px;box-shadow:var(--shadow-s);
+  cursor:pointer;border:3px solid transparent;transition:transform .15s,border .15s;animation:enterCard .4s
+}
+@keyframes enterCard{from{opacity:0;transform:translateX(-20px)}}
+.order:hover{transform:translateX(3px)}
+.order.sel{border-color:var(--berry);background:#fff6f9}
+.order .face{font-size:36px}
+.order .info{flex:1;min-width:0}
+.order .nm{font-family:'Jua';font-size:15px}
+.order .what{font-size:13px;color:var(--muted)}
+.order .patbar{width:100%}
+.empty-box{padding:26px 14px;text-align:center;color:var(--muted);background:var(--cream2);border-radius:18px;line-height:1.7}
+
+.workbench{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.station{
+  background:linear-gradient(180deg,#fff,#fff4f7);border-radius:22px;padding:18px;min-height:300px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;position:relative
+}
+.glass{
+  width:150px;height:170px;border:5px solid #f3d2dc;border-top:none;border-radius:0 0 40px 40px;
+  background:rgba(255,255,255,.7);position:relative;display:flex;flex-wrap:wrap-reverse;align-content:flex-start;justify-content:center;
+  gap:2px;padding:8px;font-size:30px;overflow:hidden
+}
+.glass span{animation:drop .45s cubic-bezier(.3,1.5,.6,1)}
+@keyframes drop{from{transform:translateY(-90px);opacity:0}}
+.glass.shake{animation:shake .25s linear infinite}
+@keyframes shake{25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+.progress{width:180px;height:12px;background:var(--pink);border-radius:9px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--berry));transition:width 1.3s linear}
+.target-card{background:var(--cream2);border-radius:16px;padding:10px 14px;width:100%;display:flex;align-items:center;gap:10px;text-align:left}
+.hint{font-size:13px;margin-top:4px;color:var(--brown-l);background:#fff;border-radius:10px;padding:4px 8px;display:inline-block}
+.ing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:9px}
+.ing{
+  background:#fff;border-radius:16px;padding:10px 4px;box-shadow:var(--shadow-s);display:flex;flex-direction:column;align-items:center;gap:2px;
+  transition:transform .12s,background .15s;border:3px solid transparent;min-height:78px
+}
+.ing:active{transform:scale(.9)}
+.ing .e{font-size:28px}
+.ing .n{font-size:12.5px}
+.ing .c{font-size:11px;color:#c98a00}
+.ing.on{border-color:var(--berry);background:#fff0f5;transform:translateY(-3px)}
+.brew-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+
+/* =========================================================
+   8. 메뉴 / 상점 / 손님 카드
+   ========================================================= */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.card{background:#fff;border-radius:20px;padding:14px;box-shadow:var(--shadow-s);position:relative;display:flex;flex-direction:column;gap:8px;transition:transform .2s;animation:enterCard2 .4s both}
+@keyframes enterCard2{from{opacity:0;transform:translateY(14px)}}
+.card:hover{transform:translateY(-3px)}
+.card.locked{background:#f6eeea;filter:grayscale(.6)}
+.card .top{display:flex;align-items:center;gap:10px}
+.card .title{font-family:'Jua';font-size:17px}
+.card .price{color:#c98a00;font-family:'Jua'}
+.tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;background:var(--pink);color:var(--berry-d)}
+.tag.gold{background:#fff1cc;color:#9a6b00}
+.tag.mint{background:#d9f5ec;color:#2a7a62}
+.tag.gray{background:#eee;color:#888}
+.recipe{display:flex;flex-wrap:wrap;gap:4px}
+.recipe span{background:var(--cream2);border-radius:10px;padding:2px 7px;font-size:12px}
+.pop{height:8px;background:var(--pink);border-radius:8px;overflow:hidden}
+.pop i{display:block;height:100%;background:linear-gradient(90deg,var(--coral),var(--berry))}
+.lockmsg{position:absolute;top:10px;right:10px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filter{padding:8px 14px;border-radius:999px;background:#fff;box-shadow:var(--shadow-s);font-size:14px;transition:transform .12s}
+.filter.on{background:var(--brown);color:#fff}
+.filter:active{transform:scale(.92)}
+.shop-preview{height:74px;border-radius:14px;display:grid;place-items:center;font-size:40px;position:relative;overflow:hidden}
+.tbl-prev{width:80px;height:22px;border-radius:50%;box-shadow:0 6px 0 rgba(0,0,0,.18)}
+.satbar{height:9px;background:#f2e3dc;border-radius:9px;overflow:hidden}
+.satbar i{display:block;height:100%;border-radius:9px}
+
+/* =========================================================
+   9. 정산 화면
+   ========================================================= */
+.sales-top{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.money{background:#fff;border-radius:18px;padding:14px;box-shadow:var(--shadow-s);text-align:center}
+.money .v{font-family:'Jua';font-size:24px}
+.money.in .v{color:#2e9d63} .money.out .v{color:#e2556a} .money.net .v{color:#c98a00}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 6px;text-align:center;border-bottom:1px dashed #f0d6cc}
+th{font-family:'Jua';font-weight:400;color:var(--brown-l)}
+.bars .row{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:13.5px}
+.bars .row .lbl{width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bars .row .bar{flex:1;height:14px;background:var(--pink);border-radius:9px;overflow:hidden}
+.bars .row .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--berry));border-radius:9px;transition:width .6s}
+.ledger{max-height:300px;overflow-y:auto}
+.ledger .li{display:flex;justify-content:space-between;padding:7px 4px;border-bottom:1px dashed #f0d6cc;font-size:13.5px}
+.ledger .plus{color:#2e9d63;font-family:'Jua'} .ledger .minus{color:#e2556a;font-family:'Jua'}
+
+/* =========================================================
+   10. 모달 / 토스트 / 이펙트
+   ========================================================= */
+.modal-bg{position:fixed;inset:0;background:rgba(90,58,46,.35);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal-bg.show{display:flex;animation:fadeIn .25s}
+@keyframes fadeIn{from{opacity:0}}
+.modal{background:var(--cream);border-radius:26px;padding:24px;max-width:430px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.2);text-align:center;animation:modalIn .4s cubic-bezier(.3,1.5,.5,1);max-height:90vh;overflow-y:auto;border:4px solid #fff}
+@keyframes modalIn{from{transform:scale(.7);opacity:0}}
+.modal h2{color:var(--berry-d);font-size:24px;margin-bottom:8px}
+.modal p{line-height:1.6;margin-bottom:10px}
+.modal .row-btns{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.modal input[type=text]{width:100%;padding:12px 16px;border-radius:14px;border:2px solid var(--pink2);font-size:16px;font-family:inherit;color:var(--text);background:#fff;outline:none;text-align:center}
+.modal input[type=text]:focus{border-color:var(--berry)}
+.big-emoji{font-size:64px;animation:bob 2s infinite}
+.unlock-list{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px}
+.unlock-list span{background:#fff;border-radius:12px;padding:5px 10px;font-size:13px;box-shadow:var(--shadow-s)}
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;border-bottom:1px dashed var(--pink2);gap:10px}
+
+#toasts{position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:300;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:92%;max-width:380px}
+.toast{background:#fff;border-radius:999px;padding:10px 18px;box-shadow:var(--shadow);font-size:14.5px;animation:toastIn .35s cubic-bezier(.3,1.5,.5,1), toastOut .4s 2.3s forwards;border:2px solid var(--pink2);text-align:center}
+.toast.good{border-color:#9ee6bf}.toast.bad{border-color:#ffb3b3}.toast.gold{border-color:var(--gold)}
+@keyframes toastIn{from{transform:translateY(-20px) scale(.8);opacity:0}}
+@keyframes toastOut{to{transform:translateY(-14px);opacity:0}}
+.floater{position:fixed;z-index:250;font-family:'Jua';font-size:20px;color:#c98a00;pointer-events:none;animation:floatUp 1.3s forwards;text-shadow:0 2px 0 #fff,0 0 6px #fff;white-space:nowrap}
+@keyframes floatUp{0%{transform:translate(-50%,0) scale(.6);opacity:0}20%{transform:translate(-50%,-10px) scale(1.15);opacity:1}100%{transform:translate(-50%,-70px);opacity:0}}
+.confetti{position:fixed;top:-20px;z-index:260;font-size:22px;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+.bump{animation:bump .45s}
+@keyframes bump{40%{transform:scale(1.18)}}
+
+/* =========================================================
+   11. 반응형 (태블릿 / 모바일)
+   ========================================================= */
+@media (max-width:980px){
+  .cafe-layout{grid-template-columns:1fr}
+  .brew-layout{grid-template-columns:1fr}
+  .orders{flex-direction:row;overflow-x:auto;max-height:none;padding-bottom:8px}
+  .order{min-width:230px}
+  .sales-top{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  header{padding:8px 10px}
+  .logo h1{font-size:18px}.logo-badge{width:40px;height:40px;font-size:21px}
+  .stats{margin-left:0;width:100%;gap:6px}
+  .chip{padding:5px 9px;font-size:12.5px}.chip b{font-size:14px}
+  .lvl-chip{flex:1;min-width:130px}
+  .icon-btn{width:34px;height:34px;font-size:15px}
+  .chip .muted{display:none}
+  nav.tabs{position:fixed;bottom:0;left:0;right:0;margin:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom));background:rgba(255,248,240,.96);backdrop-filter:blur(8px);z-index:60;gap:4px;border-top:2px dashed var(--pink2)}
+  .tab{min-width:0;padding:7px 2px;font-size:11.5px;border-radius:14px}
+  .tab .ti{font-size:20px}
+  .tab .badge{right:2px;top:0}
+  main{padding:12px 10px 100px}
+  .scene{height:380px}
+  .counter{width:120px;height:64px;left:2%}
+  .counter .machine{font-size:28px;top:-40px;left:6px}.counter .barista{font-size:38px;top:-52px;left:48px}.counter .cake{display:none}
+  .seats{left:33%;right:3%;top:42%;grid-template-columns:repeat(3,1fr)}
+  .seat .guest{font-size:32px}
+  .seat .table{width:48px}
+  .seat .chair{font-size:20px}
+  .window{width:80px;height:70px;left:3%}
+  .deco-wall{font-size:34px;right:4%}
+  .deco-plant{font-size:42px}
+  .workbench{grid-template-columns:1fr}
+  .station{min-height:240px}
+  .glass{width:120px;height:140px;font-size:24px}
+  .cards{grid-template-columns:1fr 1fr;gap:10px}
+  .card{padding:11px}
+  .card .title{font-size:15px}
+  .sales-top .money .v{font-size:19px}
+  .ing-grid{grid-template-columns:repeat(4,1fr);gap:7px}
+  .ing{min-height:74px}
+  #toasts{top:120px}
+  .panel{padding:14px}
+}
+@media (max-width:380px){
+  .cards{grid-template-columns:1fr}
+  .ing-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= 헤더 ================= -->
+<header>
+  <div class="head-row">
+    <div class="logo" onclick="openSettings()" title="카페 설정">
+      <div class="logo-badge">🍓</div>
+      <div><h1 id="cafeName">딸기구름 카페</h1><small><span class="open-dot" id="openDot"></span> <span id="dayLabel">1일차</span></small></div>
+    </div>
+    <div class="stats">
+      <div class="chip coin" id="coinChip">🪙 <b id="coinVal">0</b></div>
+      <div class="chip lvl-chip">⭐ <b id="lvlVal">Lv.1</b><div class="expbar"><i id="expBar"></i></div><span class="muted" id="expTxt"></span></div>
+      <div class="chip">💰 오늘 <b id="todayRev">0</b></div>
+      <div class="chip">🙋 <b id="todayVis">0</b>명</div>
+      <button class="icon-btn" id="muteBtn" onclick="toggleMute()" title="소리 켜기/끄기">🔊</button>
+      <button class="icon-btn" onclick="openSettings()" title="설정">⚙️</button>
+    </div>
+  </div>
+</header>
+
+<!-- ================= 탭 ================= -->
+<nav class="tabs" id="tabs">
+  <button class="tab active" data-screen="cafe"><span class="ti">🏠</span>카페</button>
+  <button class="tab" data-screen="brew"><span class="ti">🧋</span>제조<span class="badge" id="brewBadge" style="display:none">0</span></button>
+  <button class="tab" data-screen="menu"><span class="ti">📖</span>메뉴</button>
+  <button class="tab" data-screen="shop"><span class="ti">🛍️</span>인테리어</button>
+  <button class="tab" data-screen="sales"><span class="ti">💰</span>정산</button>
+  <button class="tab" data-screen="guests"><span class="ti">👥</span>손님</button>
+</nav>
+
+<main>
+  <section class="screen active" id="screen-cafe"></section>
+  <section class="screen" id="screen-brew"></section>
+  <section class="screen" id="screen-menu"></section>
+  <section class="screen" id="screen-shop"></section>
+  <section class="screen" id="screen-sales"></section>
+  <section class="screen" id="screen-guests"></section>
+</main>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div id="toasts"></div>
+
+<script>
+/* =========================================================
+   [1] 게임 데이터 정의
+   ========================================================= */
+
+// 재료 목록 (id: {이름, 이모지, 1회 사용 원가})
+const INGREDIENTS = {
+  espresso:{n:'에스프레소',e:'☕',c:4}, water:{n:'물',e:'💧',c:1}, milk:{n:'우유',e:'🥛',c:3},
+  ice:{n:'얼음',e:'🧊',c:1}, vanilla:{n:'바닐라 시럽',e:'🌼',c:3}, strawberry:{n:'딸기청',e:'🍓',c:5},
+  choco:{n:'초코 소스',e:'🍫',c:4}, tea:{n:'홍차',e:'🫖',c:3}, lemon:{n:'레몬',e:'🍋',c:3},
+  matcha:{n:'말차 가루',e:'🍵',c:5}, caramel:{n:'카라멜',e:'🍭',c:3}, yogurt:{n:'요거트',e:'🥣',c:4},
+  cinnamon:{n:'시나몬',e:'🌰',c:2}, cream:{n:'휘핑크림',e:'🍦',c:4}, banana:{n:'바나나',e:'🍌',c:3},
+  mint:{n:'민트 시럽',e:'🌿',c:4}, grapefruit:{n:'자몽청',e:'🍊',c:4}, honey:{n:'꿀',e:'🍯',c:4},
+  flour:{n:'밀가루',e:'🌾',c:2}, butter:{n:'버터',e:'🧈',c:3}, egg:{n:'달걀',e:'🥚',c:2},
+  sugar:{n:'설탕',e:'🍬',c:1}, sponge:{n:'케이크 시트',e:'🍞',c:6}, croissant:{n:'크루아상 생지',e:'🥐',c:6},
+  cheese:{n:'마스카포네',e:'🧀',c:6}
+};
+
+// 메뉴 (음료 15종 + 디저트 8종 = 23종) — lv: 해금 레벨, ing: 정확한 레시피
+const MENU = [
+  {id:'americano',  n:'아메리카노',     type:'drink', price:30, lv:1, color:'#3b2418', top:'',   ing:['espresso','water']},
+  {id:'latte',      n:'카페라떼',       type:'drink', price:35, lv:1, color:'#c89f7a', top:'🤍', ing:['espresso','milk']},
+  {id:'strawlatte', n:'딸기라떼',       type:'drink', price:40, lv:1, color:'#f7a8bd', top:'🍓', ing:['strawberry','milk']},
+  {id:'vanilla',    n:'바닐라라떼',     type:'drink', price:42, lv:2, color:'#ead3a6', top:'🌼', ing:['espresso','milk','vanilla']},
+  {id:'chocolatte', n:'초코라떼',       type:'drink', price:40, lv:2, color:'#7b4a2e', top:'🍫', ing:['choco','milk']},
+  {id:'icedtea',    n:'레몬 아이스티',  type:'drink', price:38, lv:2, color:'#e9a94a', top:'🍋', ing:['tea','lemon','ice'], straw:true},
+  {id:'matcha',     n:'말차라떼',       type:'drink', price:45, lv:3, color:'#9cc47a', top:'🍵', ing:['matcha','milk']},
+  {id:'caramel',    n:'카라멜 마키아토',type:'drink', price:48, lv:3, color:'#c98a4b', top:'🍭', ing:['espresso','milk','caramel']},
+  {id:'strawsmoothie',n:'딸기 스무디',  type:'drink', price:52, lv:4, color:'#ff7f9f', top:'🍓', ing:['strawberry','yogurt','ice'], straw:true},
+  {id:'cappuccino', n:'카푸치노',       type:'drink', price:44, lv:4, color:'#b07d56', top:'☁️', ing:['espresso','milk','cinnamon']},
+  {id:'einspanner', n:'아인슈페너',     type:'drink', price:50, lv:5, color:'#4a2c1d', top:'🍦', ing:['espresso','water','cream']},
+  {id:'banana',     n:'바나나 스무디',  type:'drink', price:50, lv:5, color:'#f7e08a', top:'🍌', ing:['banana','milk','ice'], straw:true},
+  {id:'mintchoco',  n:'민트초코',       type:'drink', price:55, lv:6, color:'#8fd6c0', top:'🌿', ing:['mint','choco','milk']},
+  {id:'grapetea',   n:'허니 자몽티',    type:'drink', price:52, lv:6, color:'#ff9f7a', top:'🍯', ing:['grapefruit','honey','tea']},
+  {id:'cloudlatte', n:'딸기구름 라떼',  type:'drink', price:75, lv:9, color:'#ffc4d6', top:'☁️', ing:['espresso','milk','cream','strawberry']},
+  {id:'cookie',     n:'초코칩 쿠키',    type:'dessert',price:28,lv:1, emoji:'🍪', ing:['flour','butter','choco']},
+  {id:'cake',       n:'딸기 쇼트케이크',type:'dessert',price:58,lv:2, emoji:'🍰', ing:['sponge','cream','strawberry']},
+  {id:'donut',      n:'슈가 도넛',      type:'dessert',price:35,lv:3, emoji:'🍩', ing:['flour','egg','sugar']},
+  {id:'cupcake',    n:'크림 컵케이크',  type:'dessert',price:42,lv:4, emoji:'🧁', ing:['flour','egg','cream']},
+  {id:'croffle',    n:'허니 크로플',    type:'dessert',price:48,lv:5, emoji:'🧇', ing:['croissant','butter','honey']},
+  {id:'pudding',    n:'커스터드 푸딩',  type:'dessert',price:45,lv:6, emoji:'🍮', ing:['egg','milk','caramel']},
+  {id:'tiramisu',   n:'티라미수',       type:'dessert',price:65,lv:7, emoji:'🍫', ing:['sponge','espresso','cheese']},
+  {id:'parfait',    n:'딸기 파르페',    type:'dessert',price:60,lv:8, emoji:'🍨', ing:['strawberry','cream','yogurt']},
+];
+const MENU_MAP = Object.fromEntries(MENU.map(m=>[m.id,m]));
+
+// 손님 캐릭터 10종 — pat: 기다리는 시간(초), tip: 팁 배율, fav: 선호 메뉴
+const CUSTOMERS = [
+  {id:'minji',  e:'👩‍🎓', n:'대학생 민지',     p:'시험 기간이라 항상 바빠요',   lv:1, pat:38, tip:1.0, fav:['americano','latte','cookie']},
+  {id:'hajun',  e:'🧒',  n:'꼬마 하준',       p:'달콤한 건 다 좋아!',           lv:1, pat:30, tip:0.7, fav:['chocolatte','strawlatte','cookie','donut']},
+  {id:'grandpa',e:'👴',  n:'김 할아버지',     p:'느긋하고 인자한 성격',          lv:1, pat:65, tip:1.3, fav:['latte','pudding','grapetea']},
+  {id:'jihun',  e:'🧑‍💼', n:'직장인 지훈',     p:'카페인 수혈이 시급해요',        lv:2, pat:32, tip:1.1, fav:['americano','vanilla','einspanner']},
+  {id:'sohee',  e:'🧑‍🎨', n:'화가 소희',       p:'감성 가득한 메뉴를 좋아해요',   lv:3, pat:50, tip:1.2, fav:['matcha','cappuccino','parfait','cake']},
+  {id:'couple', e:'💑',  n:'데이트 커플',     p:'달달한 분위기를 즐겨요',        lv:3, pat:45, tip:1.4, fav:['strawlatte','cake','strawsmoothie','cupcake']},
+  {id:'yuna',   e:'🧑‍🎤', n:'연습생 유나',     p:'다이어트 중이라 상큼한 게 좋아요',lv:4,pat:35, tip:1.0, fav:['icedtea','strawsmoothie','banana','americano']},
+  {id:'neko',   e:'🐱',  n:'고양이 손님 냥냥',p:'변덕쟁이 손님이다냥',           lv:5, pat:28, tip:1.6, fav:['latte','pudding','cupcake']},
+  {id:'chef',   e:'👨‍🍳', n:'파티시에 피에르', p:'깐깐한 미식가예요',             lv:6, pat:42, tip:1.8, fav:['tiramisu','croffle','caramel','cappuccino']},
+  {id:'bear',   e:'🐻',  n:'곰돌이 푸근',     p:'꿀을 정말 사랑하는 곰',         lv:7, pat:55, tip:1.5, fav:['grapetea','croffle','mintchoco','cloudlatte']},
+];
+const CUST_MAP = Object.fromEntries(CUSTOMERS.map(c=>[c.id,c]));
+
+// 인테리어 아이템 27종 — cat: 카테고리, fx: 효과(seats 좌석, pat 인내심%, tip 팁%, freq 방문빈도%)
+const ITEM_CATS = {wallpaper:'🧱 벽지', floor:'🟫 바닥', table:'🍽️ 테이블', chair:'🪑 의자', light:'💡 조명', plant:'🪴 화분', decor:'🧸 장식'};
+const OPTIONAL_CATS = ['light','plant','decor']; // 해제 가능한 카테고리
+const ITEMS = [
+  // 벽지
+  {id:'wp_cream', cat:'wallpaper', n:'크림 스트라이프', e:'🤍', price:0,   lv:1, fx:{}, bg:'repeating-linear-gradient(90deg,#fff6ec 0 24px,#fdeadb 24px 48px)'},
+  {id:'wp_dot',   cat:'wallpaper', n:'핑크 도트',       e:'🩷', price:120, lv:1, fx:{tip:3}, bg:'radial-gradient(circle,#ffb8cb 0 4px,transparent 5px) 0 0/28px 28px,#ffe6ee'},
+  {id:'wp_check', cat:'wallpaper', n:'딸기우유 체크',   e:'🍓', price:220, lv:3, fx:{tip:5}, bg:'repeating-linear-gradient(0deg,rgba(255,140,170,.18) 0 18px,transparent 18px 36px),repeating-linear-gradient(90deg,rgba(255,140,170,.18) 0 18px,transparent 18px 36px),#fff4f6'},
+  {id:'wp_mint',  cat:'wallpaper', n:'민트 하트',       e:'💚', price:320, lv:5, fx:{tip:7}, bg:'radial-gradient(circle,#fff 0 3px,transparent 4px) 0 0/22px 22px,linear-gradient(#d4f3e9,#c2ecdf)'},
+  {id:'wp_night', cat:'wallpaper', n:'별밤 갤럭시',     e:'🌌', price:480, lv:7, fx:{tip:10}, bg:'radial-gradient(circle,#fff6b0 0 1.5px,transparent 2.5px) 0 0/34px 30px,radial-gradient(circle,#ffd1e0 0 1px,transparent 2px) 12px 15px/26px 26px,linear-gradient(#5a4b8a,#8a6fb8)'},
+  // 바닥
+  {id:'fl_wood',  cat:'floor', n:'원목 마루',       e:'🪵', price:0,   lv:1, fx:{}, bg:'repeating-linear-gradient(90deg,#d9a882 0 60px,#cf9b74 60px 62px,#e0b48f 62px 120px,#cf9b74 120px 122px)'},
+  {id:'fl_tile',  cat:'floor', n:'체크 타일',       e:'🏁', price:150, lv:2, fx:{pat:5}, bg:'conic-gradient(#fff 25%,#ffd3df 0 50%,#fff 0 75%,#ffd3df 0) 0 0/40px 40px'},
+  {id:'fl_marble',cat:'floor', n:'핑크 대리석',     e:'💎', price:360, lv:6, fx:{pat:10,tip:5}, bg:'linear-gradient(115deg,transparent 40%,rgba(255,255,255,.7) 42%,transparent 45%),linear-gradient(60deg,transparent 60%,rgba(220,150,170,.3) 62%,transparent 64%),#f7d5df'},
+  // 테이블 (좌석 수 결정)
+  {id:'tb_basic', cat:'table', n:'기본 원목 테이블',e:'🟤', price:0,   lv:1, fx:{seats:3}, color:'#b07d56'},
+  {id:'tb_heart', cat:'table', n:'하트 라운드 테이블',e:'💗',price:180, lv:2, fx:{seats:4}, color:'#ff9fb8'},
+  {id:'tb_marble',cat:'table', n:'화이트 대리석 테이블',e:'⚪',price:340,lv:4, fx:{seats:5}, color:'#f4eee9'},
+  {id:'tb_gold',  cat:'table', n:'골드 VIP 테이블', e:'🟡', price:650, lv:8, fx:{seats:6,tip:5}, color:'#f5b942'},
+  // 의자
+  {id:'ch_basic', cat:'chair', n:'나무 의자',       e:'🪑', price:0,   lv:1, fx:{}},
+  {id:'ch_cushion',cat:'chair',n:'푹신 쿠션 의자',  e:'💺', price:130, lv:2, fx:{pat:10}},
+  {id:'ch_sofa',  cat:'chair', n:'벨벳 소파',       e:'🛋️', price:320, lv:5, fx:{pat:20}},
+  // 조명
+  {id:'li_bulb',  cat:'light', n:'꼬마 전구',       e:'💡', price:100, lv:1, fx:{tip:5}},
+  {id:'li_lantern',cat:'light',n:'빈티지 랜턴',     e:'🏮', price:230, lv:3, fx:{tip:10}},
+  {id:'li_crystal',cat:'light',n:'크리스탈 샹들리에',e:'🔮',price:520, lv:7, fx:{tip:18}},
+  // 화분
+  {id:'pl_cactus',cat:'plant', n:'미니 선인장',     e:'🌵', price:60,  lv:1, fx:{pat:5}},
+  {id:'pl_tulip', cat:'plant', n:'튤립 화분',       e:'🌷', price:120, lv:2, fx:{pat:8}},
+  {id:'pl_monstera',cat:'plant',n:'몬스테라',       e:'🪴', price:210, lv:4, fx:{pat:12}},
+  {id:'pl_cherry',cat:'plant', n:'벚꽃 나무',       e:'🌸', price:400, lv:6, fx:{pat:15,freq:5}},
+  // 장식
+  {id:'de_frame', cat:'decor', n:'딸기 액자',       e:'🖼️', price:80,  lv:1, fx:{freq:5}},
+  {id:'de_teddy', cat:'decor', n:'곰인형',          e:'🧸', price:170, lv:3, fx:{freq:10}},
+  {id:'de_radio', cat:'decor', n:'레트로 라디오',   e:'📻', price:290, lv:5, fx:{freq:15}},
+  {id:'de_neon',  cat:'decor', n:'하트 네온사인',   e:'💖', price:540, lv:8, fx:{freq:20}},
+  {id:'de_piano', cat:'decor', n:'그랜드 피아노',   e:'🎹', price:850, lv:10,fx:{freq:25,tip:10}},
+];
+const ITEM_MAP = Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+
+const MAX_LEVEL = 10;
+const needExp = lv => 50 + lv*35;          // 레벨업에 필요한 경험치
+const SAVE_KEY = 'berryCloudCafe_save_v1';
+
+/* =========================================================
+   [2] 게임 상태 (저장되는 데이터 S / 실행 중 데이터 R)
+   ========================================================= */
+function newState(){
+  return {
+    started:false, cafeName:'딸기구름 카페', coins:200, level:1, exp:0,
+    totalRevenue:0, totalExpense:0,
+    today:{day:1,revenue:0,expense:0,visitors:0,served:0,failed:0,tips:0},
+    history:[], sales:{}, ledger:[],
+    owned:['wp_cream','fl_wood','tb_basic','ch_basic'],
+    equipped:{wallpaper:'wp_cream',floor:'fl_wood',table:'tb_basic',chair:'ch_basic',light:null,plant:null,decor:null},
+    guests:{}, // 손님별 {visits, sat}
+    muted:false
+  };
+}
+let S = newState();
+const R = { open:false, customers:[], selected:null, uid:0, nextSpawn:0, screen:'cafe', shopCat:'all', menuCat:'all',
+            brew:{picked:[], result:null, brewing:false}, hint:false };
+
+// 저장 & 불러오기 (localStorage)
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+function load(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw), base = newState();
+    S = Object.assign(base, d);
+    S.today = Object.assign(newState().today, d.today||{});
+    S.equipped = Object.assign(newState().equipped, d.equipped||{});
+    return true;
+  }catch(e){ S = newState(); return false; }
+}
+
+/* =========================================================
+   [3] 유틸 함수
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const fmt = n => Math.round(n).toLocaleString('ko-KR');
+const rand = a => a[Math.floor(Math.random()*a.length)];
+const guest = id => (S.guests[id] ||= {visits:0, sat:50});
+const isRegular = id => { const g = S.guests[id]; return !!g && g.visits>=5 && g.sat>=70; };
+const unlockedMenu = () => MENU.filter(m=>m.lv<=S.level);
+function bonus(){ // 장착된 인테리어 효과 합산
+  const b = {seats:3, pat:0, tip:0, freq:0};
+  Object.values(S.equipped).forEach(id=>{
+    if(!id) return; const fx = ITEM_MAP[id].fx;
+    if(fx.seats) b.seats = fx.seats;
+    b.pat += fx.pat||0; b.tip += fx.tip||0; b.freq += fx.freq||0;
+  });
+  return b;
+}
+function itemIcon(m, cls=''){ // 메뉴 일러스트 (CSS 컵 / 디저트 이모지)
+  if(!m) return `<span class="${cls}"><span class="cup"><span class="cup-top">❓</span><span class="cup-body"><span class="liquid" style="background:#9a8f8a"></span></span><span class="cup-handle"></span></span></span>`;
+  if(m.type==='dessert') return `<span class="${cls}"><span class="dessert">${m.emoji}</span></span>`;
+  return `<span class="${cls}"><span class="cup">${m.straw?'<span class="straw"></span>':''}<span class="cup-top">${m.top}</span><span class="cup-body"><span class="liquid" style="background:${m.color}"></span></span><span class="cup-handle"></span></span></span>`;
+}
+function addLedger(type,label,amount){
+  S.ledger.unshift({type,label,amount,day:S.today.day});
+  if(S.ledger.length>60) S.ledger.length = 60;
+}
+function addIncome(amount,label){ S.coins+=amount; S.totalRevenue+=amount; S.today.revenue+=amount; addLedger('in',label,amount); }
+function addExpense(amount,label){ S.coins-=amount; S.totalExpense+=amount; S.today.expense+=amount; addLedger('out',label,amount); }
+
+/* =========================================================
+   [4] 효과음 (Web Audio API) + 음소거
+   ========================================================= */
+let actx = null;
+function sfx(kind){
+  if(S.muted) return;
+  try{
+    actx ||= new (window.AudioContext||window.webkitAudioContext)();
+    const seq = {
+      click:[[660,.05]], pick:[[880,.06]], bell:[[988,.12],[1319,.2]], coin:[[1047,.07],[1568,.14]],
+      bad:[[330,.12],[247,.22]], level:[[523,.1],[659,.1],[784,.1],[1047,.3]], brew:[[440,.08],[554,.08],[659,.12]], buy:[[784,.08],[1175,.16]]
+    }[kind] || [[600,.05]];
+    let t = actx.currentTime;
+    seq.forEach(([f,d])=>{
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = kind==='bad'?'triangle':'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.18,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+      o.connect(g).connect(actx.destination); o.start(t); o.stop(t+d+.02); t += d*.9;
+    });
+  }catch(e){}
+}
+function toggleMute(){ S.muted=!S.muted; save(); renderHeader(); toast(S.muted?'🔇 소리를 껐어요':'🔊 소리를 켰어요'); if(!S.muted) sfx('click'); }
+
+/* =========================================================
+   [5] 시각 효과 (토스트, 떠오르는 코인, 컨페티, 버튼 리플)
+   ========================================================= */
+function toast(msg, kind=''){
+  const t = document.createElement('div'); t.className='toast '+kind; t.textContent=msg;
+  $('#toasts').appendChild(t); setTimeout(()=>t.remove(), 2800);
+  while($('#toasts').children.length>3) $('#toasts').firstChild.remove();
+}
+function floater(text, x, y){
+  const f = document.createElement('div'); f.className='floater'; f.textContent=text;
+  f.style.left = x+'px'; f.style.top = y+'px'; document.body.appendChild(f); setTimeout(()=>f.remove(),1300);
+}
+function floatAt(el, text){
+  if(el && el.offsetParent){ const r=el.getBoundingClientRect(); floater(text, r.left+r.width/2, r.top); }
+  else { const r=$('#coinChip').getBoundingClientRect(); floater(text, r.left+r.width/2, r.bottom+10); }
+}
+function confetti(n=40){
+  const em = ['🍓','⭐','🌸','💖','✨','🪙'];
+  for(let i=0;i<n;i++){
+    const c = document.createElement('div'); c.className='confetti'; c.textContent=rand(em);
+    c.style.left = Math.random()*100+'vw'; c.style.animationDuration = (1.8+Math.random()*1.8)+'s';
+    c.style.animationDelay = Math.random()*.5+'s'; document.body.appendChild(c); setTimeout(()=>c.remove(),4200);
+  }
+}
+function bump(sel){ const el=$(sel); if(!el) return; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+// 모든 버튼에 리플(물결) 피드백
+document.addEventListener('pointerdown', e=>{
+  const b = e.target.closest('.btn,.tab,.ing,.filter,.icon-btn'); if(!b || b.disabled) return;
+  if(!b.classList.contains('btn')) return;
+  const r = b.getBoundingClientRect(), s = Math.max(r.width,r.height);
+  const rp = document.createElement('span'); rp.className='ripple';
+  rp.style.width = rp.style.height = s+'px'; rp.style.left = (e.clientX-r.left-s/2)+'px'; rp.style.top = (e.clientY-r.top-s/2)+'px';
+  b.appendChild(rp); setTimeout(()=>rp.remove(),600);
+});
+
+/* =========================================================
+   [6] 모달
+   ========================================================= */
+function openModal(html, closable=true){
+  $('#modal').innerHTML = html; $('#modalBg').classList.add('show');
+  $('#modalBg').onclick = e=>{ if(closable && e.target.id==='modalBg') closeModal(); };
+}
+function closeModal(){ $('#modalBg').classList.remove('show'); }
+
+/* =========================================================
+   [7] 화면 전환 (탭)
+   ========================================================= */
+$('#tabs').addEventListener('click', e=>{
+  const t = e.target.closest('.tab'); if(!t) return; sfx('click'); go(t.dataset.screen);
+});
+function go(screen){
+  R.screen = screen;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.screen===screen));
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active', s.id==='screen-'+screen));
+  renderScreen(); window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderScreen(){
+  ({cafe:renderCafe, brew:renderBrew, menu:renderMenu, shop:renderShop, sales:renderSales, guests:renderGuests})[R.screen]();
+}
+
+/* =========================================================
+   [8] 헤더 렌더링
+   ========================================================= */
+function renderHeader(){
+  $('#cafeName').textContent = S.cafeName;
+  document.title = '🍓 '+S.cafeName+' - 카페 운영 게임';
+  $('#coinVal').textContent = fmt(S.coins);
+  $('#lvlVal').textContent = 'Lv.'+S.level;
+  const pct = S.level>=MAX_LEVEL ? 100 : S.exp/needExp(S.level)*100;
+  $('#expBar').style.width = pct+'%';
+  $('#expTxt').textContent = S.level>=MAX_LEVEL ? 'MAX' : `${S.exp}/${needExp(S.level)}`;
+  $('#todayRev').textContent = fmt(S.today.revenue);
+  $('#todayVis').textContent = S.today.visitors;
+  $('#dayLabel').textContent = `${S.today.day}일차 · ${R.open?'영업 중':'준비 중'}`;
+  $('#openDot').classList.toggle('on', R.open);
+  $('#muteBtn').textContent = S.muted ? '🔇' : '🔊';
+  const b = $('#brewBadge'); b.style.display = R.customers.length?'':'none'; b.textContent = R.customers.length;
+}
+
+/* =========================================================
+   [9] 메인 카페 화면
+   ========================================================= */
+function sceneHTML(){
+  const eq = S.equipped, b = bonus();
+  const wall = ITEM_MAP[eq.wallpaper].bg, floor = ITEM_MAP[eq.floor].bg;
+  const tableColor = ITEM_MAP[eq.table].color, chair = ITEM_MAP[eq.chair].e;
+  let seats = '';
+  for(let i=0;i<b.seats;i++){
+    const c = R.customers.find(x=>x.seat===i);
+    if(c){
+      const t = CUST_MAP[c.type], m = MENU_MAP[c.menu];
+      seats += `<div class="seat ${R.selected===c.uid?'selected':''}" id="seat-${c.uid}" onclick="pickCustomer(${c.uid},true)" title="${t.n}: ${m.n}">
+        <span class="chair">${chair}</span><span class="table" style="background:${tableColor}"></span>
+        <div class="bubble">${itemIcon(m,'mini')}<div class="patbar"><i data-pat="${c.uid}"></i></div></div>
+        <span class="guest" id="guest-${c.uid}">${t.e}${isRegular(t.id)?'<span class="regular">💖</span>':''}</span></div>`;
+    } else {
+      seats += `<div class="seat empty"><span class="chair">${chair}</span><span class="table" style="background:${tableColor}"></span><span class="guest"></span><div class="bubble"></div></div>`;
+    }
+  }
+  const light = eq.light ? ITEM_MAP[eq.light].e : '';
+  return `<div class="scene" id="scene">
+    <div class="wall" style="background:${wall}"></div>
+    <div class="floor" style="background:${floor}"></div>
+    <div class="window"><span class="cloud">☁️</span></div>
+    ${light?`<span class="deco-light">${light}</span><span class="deco-light l2">${light}</span>`:''}
+    ${eq.decor?`<span class="deco-wall">${ITEM_MAP[eq.decor].e}</span>`:''}
+    ${eq.plant?`<span class="deco-plant">${ITEM_MAP[eq.plant].e}</span>`:''}
+    <div class="sign">🍓 ${esc(S.cafeName)} <span class="open-tag ${R.open?'on':''}">${R.open?'OPEN':'CLOSED'}</span></div>
+    <div class="counter"><span class="machine">☕</span><span class="barista">👩‍🍳</span><span class="cake">🍰</span><div class="label">ORDER HERE</div></div>
+    <div class="seats">${seats}</div>
+    ${R.open?'':`<div class="closed-hint"><div class="card"><div style="font-size:40px">🌙</div><p class="jua" style="font-size:18px;margin:6px 0">지금은 준비 중이에요</p><button class="btn primary big" onclick="openShop()">☀️ 영업 시작</button></div></div>`}
+  </div>`;
+}
+function renderCafe(){
+  const t = S.today;
+  $('#screen-cafe').innerHTML = `
+  <div class="cafe-layout">
+    <div>${sceneHTML()}
+      <p class="muted" style="margin-top:8px;text-align:center">💡 손님을 누르면 바로 제조 화면으로 이동해요. 인내심 바가 다 줄기 전에 서빙하세요!</p>
+    </div>
+    <div class="side">
+      <div class="panel">
+        <h2>☕ 카페 운영</h2>
+        <div class="actions">
+          ${R.open
+            ? `<button class="btn primary big" onclick="go('brew')">🧋 주문 처리하기 (${R.customers.length})</button>
+               <button class="btn ghost" onclick="closeShop()">🌙 영업 마감 & 정산</button>`
+            : `<button class="btn primary big" onclick="openShop()">☀️ 영업 시작</button>`}
+          <button class="btn gold" onclick="go('shop')">🛍️ 카페 꾸미기</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>📊 ${t.day}일차 현황</h2>
+        <div class="statgrid">
+          <div class="stat"><div class="v">🪙${fmt(t.revenue)}</div><div class="k">오늘 매출</div></div>
+          <div class="stat"><div class="v">${t.visitors}</div><div class="k">방문 손님</div></div>
+          <div class="stat"><div class="v">${t.served}</div><div class="k">주문 성공</div></div>
+          <div class="stat"><div class="v">${t.failed}</div><div class="k">주문 실패</div></div>
+        </div>
+        <p class="muted" style="margin-top:10px">🪑 좌석 ${bonus().seats}개 · 팁 +${bonus().tip}% · 인내심 +${bonus().pat}% · 방문 +${bonus().freq}%</p>
+      </div>
+    </div>
+  </div>`;
+  updatePatience();
+}
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* =========================================================
+   [10] 영업 시작 / 마감 & 손님 방문 루프
+   ========================================================= */
+function openShop(){
+  if(R.open) return;
+  R.open = true; R.nextSpawn = Date.now()+1500;
+  sfx('bell'); toast('☀️ 영업을 시작했어요! 손님이 곧 찾아와요','good');
+  renderHeader(); renderScreen();
+}
+function closeShop(){
+  if(!R.open) return;
+  R.open = false; R.customers = []; R.selected = null; R.brew = {picked:[],result:null,brewing:false};
+  const t = {...S.today};
+  S.history.unshift(t); if(S.history.length>30) S.history.length=30;
+  S.today = {day:t.day+1,revenue:0,expense:0,visitors:0,served:0,failed:0,tips:0};
+  save(); sfx('coin');
+  const net = t.revenue - t.expense;
+  openModal(`<div class="big-emoji">🌙</div><h2>${t.day}일차 영업 마감!</h2>
+    <div class="statgrid" style="margin:12px 0">
+      <div class="stat"><div class="v">🪙${fmt(t.revenue)}</div><div class="k">매출 (팁 ${fmt(t.tips)} 포함)</div></div>
+      <div class="stat"><div class="v" style="color:#e2556a">🪙${fmt(t.expense)}</div><div class="k">지출</div></div>
+      <div class="stat"><div class="v" style="color:${net>=0?'#2e9d63':'#e2556a'}">${net>=0?'+':''}${fmt(net)}</div><div class="k">순이익</div></div>
+      <div class="stat"><div class="v">${t.served}/${t.visitors}</div><div class="k">성공 / 방문</div></div>
+    </div>
+    <p>${net>100?'대박 났어요! 🎉':net>0?'오늘도 수고했어요 💕':'내일은 더 잘할 수 있어요! 💪'}</p>
+    <div class="row-btns"><button class="btn ghost" onclick="closeModal();go('sales')">💰 정산 보기</button><button class="btn primary" onclick="closeModal();renderScreen()">확인</button></div>`);
+  renderHeader(); renderScreen();
+}
+function spawnInterval(){ // 레벨이 높을수록, 장식 효과가 클수록 손님이 자주 방문
+  return Math.max(3500, 12500 - S.level*800) * (1 - bonus().freq/100) * (0.8+Math.random()*0.4);
+}
+function spawnCustomer(){
+  const b = bonus();
+  if(R.customers.length >= b.seats) return false;
+  const present = R.customers.map(c=>c.type);
+  const pool = CUSTOMERS.filter(c=>c.lv<=S.level && !present.includes(c.id));
+  if(!pool.length) return false;
+  const t = rand(pool), menu = unlockedMenu();
+  const favs = t.fav.filter(id=>MENU_MAP[id].lv<=S.level);
+  const order = (favs.length && Math.random()<0.65) ? rand(favs) : rand(menu).id;
+  let seat = 0; while(R.customers.some(c=>c.seat===seat)) seat++;
+  const maxT = t.pat * (1 + b.pat/100) * (isRegular(t.id)?1.2:1) * 1000;
+  const c = {uid:++R.uid, type:t.id, menu:order, seat, maxT, deadline:Date.now()+maxT};
+  R.customers.push(c);
+  S.today.visitors++; guest(t.id);
+  if(!R.selected) R.selected = c.uid;
+  sfx('bell'); toast(`${t.e} ${t.n}${isRegular(t.id)?' (단골💖)':''} 님이 ${MENU_MAP[order].n}을(를) 주문했어요!`);
+  save(); renderHeader(); refreshLive(); bump('#todayVis');
+  return true;
+}
+// 손님 퇴장 처리 (happy: 만족 / sad: 불만)
+function removeCustomer(c, happy){
+  const g = document.getElementById('guest-'+c.uid);
+  if(g) g.classList.add(happy?'leave-happy':'leave-sad');
+  R.customers = R.customers.filter(x=>x.uid!==c.uid);
+  if(R.selected===c.uid) R.selected = R.customers[0]?.uid ?? null;
+  setTimeout(()=>{ renderHeader(); refreshLive(); }, g?700:0);
+}
+// 메인 루프: 인내심 감소 & 손님 생성
+function tick(){
+  if(!R.open) return;
+  const now = Date.now();
+  R.customers.slice().forEach(c=>{
+    if(now >= c.deadline){
+      const t = CUST_MAP[c.type], g = guest(t.id);
+      g.sat = Math.max(0, g.sat-10); g.visits++; S.today.failed++;
+      sfx('bad'); toast(`😢 ${t.e} ${t.n} 님이 기다리다 떠났어요...`,'bad');
+      removeCustomer(c,false); save();
+    }
+  });
+  if(now >= R.nextSpawn){
+    spawnCustomer();
+    R.nextSpawn = now + spawnInterval();
+  }
+  updatePatience();
+}
+function updatePatience(){
+  const now = Date.now();
+  R.customers.forEach(c=>{
+    const p = Math.max(0,(c.deadline-now)/c.maxT*100);
+    document.querySelectorAll(`[data-pat="${c.uid}"]`).forEach(el=>{
+      el.style.width = p+'%'; el.style.background = p>50?'#4fd18b':p>25?'#f5b942':'#ff6b6b';
+    });
+  });
+}
+// 손님 목록이 바뀌면 현재 화면에 맞춰 갱신
+function refreshLive(){
+  if(R.screen==='cafe') renderCafe();
+  else if(R.screen==='brew') renderOrders();
+}
+
+/* =========================================================
+   [11] 음료 제조 화면
+   ========================================================= */
+function pickCustomer(uid, jump){
+  R.selected = uid; R.hint = false; sfx('click');
+  if(jump) go('brew'); else renderBrew();
+}
+function renderBrew(){
+  $('#screen-brew').innerHTML = `
+  <div class="brew-layout">
+    <div class="panel"><h2>📝 주문 목록</h2><div class="orders" id="orders"></div></div>
+    <div class="panel">
+      <h2>🧋 제조 스테이션 <span class="sub">재료를 골라 메뉴를 만들고 손님에게 서빙하세요</span></h2>
+      <div class="workbench">
+        <div class="station" id="station"></div>
+        <div><div class="ing-grid" id="ingGrid"></div></div>
+      </div>
+    </div>
+  </div>`;
+  renderOrders(); renderStation(); renderIngredients();
+}
+function renderOrders(){
+  const box = $('#orders'); if(!box) return;
+  if(!R.open){ box.innerHTML = `<div class="empty-box">🌙 아직 영업 전이에요<br><button class="btn primary" style="margin-top:10px" onclick="openShop()">☀️ 영업 시작</button></div>`; renderStation(); return; }
+  if(!R.customers.length){ box.innerHTML = `<div class="empty-box">☕ 손님을 기다리는 중...<br>잠시 후 손님이 찾아와요!</div>`; renderStation(); return; }
+  box.innerHTML = R.customers.map(c=>{
+    const t = CUST_MAP[c.type], m = MENU_MAP[c.menu];
+    return `<div class="order ${R.selected===c.uid?'sel':''}" onclick="pickCustomer(${c.uid})">
+      <span class="face">${t.e}</span>
+      <div class="info"><div class="nm">${t.n} ${isRegular(t.id)?'💖':''}</div>
+      <div class="what">${m.n} · 🪙${m.price}</div><div class="patbar"><i data-pat="${c.uid}"></i></div></div>
+      ${itemIcon(m,'mini')}</div>`;
+  }).join('');
+  updatePatience(); renderStation();
+}
+function renderStation(){
+  const st = $('#station'); if(!st) return;
+  const c = R.customers.find(x=>x.uid===R.selected);
+  const target = c ? (()=>{ const t=CUST_MAP[c.type], m=MENU_MAP[c.menu];
+    return `<div class="target-card">${itemIcon(m)}<div style="flex:1"><div class="jua">${t.e} ${t.n}의 주문</div><div><b>${m.n}</b></div>
+      ${R.hint?`<span class="hint">📖 ${m.ing.map(i=>INGREDIENTS[i].e+' '+INGREDIENTS[i].n).join(' + ')}</span>`:`<button class="btn sm ghost" style="margin-top:4px" onclick="R.hint=true;sfx('click');renderStation()">📖 레시피 힌트</button>`}
+      </div></div>`; })() : `<div class="target-card"><span style="font-size:30px">🙋</span><div class="muted">주문 목록에서 손님을 선택하세요</div></div>`;
+
+  if(R.brew.brewing){
+    st.innerHTML = `${target}<div class="glass shake">${R.brew.picked.map(i=>`<span>${INGREDIENTS[i].e}</span>`).join('')}</div>
+      <div class="jua">열심히 만드는 중... 🎶</div><div class="progress"><i id="brewProg"></i></div>`;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ const p=$('#brewProg'); if(p) p.style.width='100%'; }));
+    return;
+  }
+  if(R.brew.result){
+    const m = R.brew.result==='mystery'?null:MENU_MAP[R.brew.result];
+    const ok = c && m && m.id===c.menu;
+    st.innerHTML = `${target}<div class="huge">${itemIcon(m)}</div>
+      <div class="jua" style="font-size:19px">${m?m.n:'정체불명의 음료 🤔'} 완성!</div>
+      ${c?`<div class="muted">${ok?'✨ 주문과 일치해요!':'⚠️ 주문과 다른 메뉴예요'}</div>`:''}
+      <div class="brew-btns">
+        <button class="btn primary big" ${c?'':'disabled'} onclick="serve()">🛎️ 서빙하기</button>
+        <button class="btn ghost" onclick="discard()">🗑️ 버리기</button>
+      </div>`;
+    return;
+  }
+  const cost = R.brew.picked.reduce((s,i)=>s+INGREDIENTS[i].c,0);
+  st.innerHTML = `${target}
+    <div class="glass">${R.brew.picked.map(i=>`<span>${INGREDIENTS[i].e}</span>`).join('') || '<span class="muted" style="font-size:13px;align-self:center;margin:auto">재료를 넣어주세요</span>'}</div>
+    <div class="muted">선택 ${R.brew.picked.length}/5 · 재료비 🪙${cost}</div>
+    <div class="brew-btns">
+      <button class="btn primary big" ${R.brew.picked.length?'':'disabled'} onclick="brew()">✨ 제조하기</button>
+      <button class="btn ghost" ${R.brew.picked.length?'':'disabled'} onclick="clearPick()">↺ 비우기</button>
+    </div>`;
+}
+function renderIngredients(){
+  const g = $('#ingGrid'); if(!g) return;
+  // 해금된 메뉴에 쓰이는 재료만 표시
+  const used = new Set(unlockedMenu().flatMap(m=>m.ing));
+  g.innerHTML = Object.entries(INGREDIENTS).filter(([id])=>used.has(id)).map(([id,i])=>
+    `<button class="ing ${R.brew.picked.includes(id)?'on':''}" onclick="toggleIng('${id}')" ${R.brew.brewing||R.brew.result?'disabled':''}>
+      <span class="e">${i.e}</span><span class="n">${i.n}</span><span class="c">🪙${i.c}</span></button>`).join('');
+}
+function toggleIng(id){
+  if(R.brew.brewing || R.brew.result) return;
+  const p = R.brew.picked, idx = p.indexOf(id);
+  if(idx>=0) p.splice(idx,1);
+  else { if(p.length>=5){ toast('재료는 최대 5개까지 넣을 수 있어요','bad'); return; } p.push(id); }
+  sfx('pick'); renderStation(); renderIngredients();
+}
+function clearPick(){ R.brew.picked=[]; sfx('click'); renderStation(); renderIngredients(); }
+// 재료 조합을 레시피와 비교해 결과 메뉴 결정
+function matchRecipe(picked){
+  const key = [...picked].sort().join('|');
+  const m = unlockedMenu().find(m=>[...m.ing].sort().join('|')===key);
+  return m ? m.id : 'mystery';
+}
+function brew(){
+  const p = R.brew.picked; if(!p.length || R.brew.brewing) return;
+  const cost = p.reduce((s,i)=>s+INGREDIENTS[i].c,0);
+  if(S.coins < cost){ toast('🪙 코인이 부족해요!','bad'); sfx('bad'); return; }
+  addExpense(cost, '재료 구입 ('+p.map(i=>INGREDIENTS[i].e).join('')+')');
+  R.brew.brewing = true; sfx('brew'); renderHeader(); renderStation(); renderIngredients();
+  setTimeout(()=>{
+    R.brew.result = matchRecipe(p); R.brew.brewing = false; R.brew.picked = [];
+    sfx(R.brew.result==='mystery'?'bad':'pick'); save();
+    if(R.screen==='brew'){ renderStation(); renderIngredients(); }
+  }, 1300);
+}
+function discard(){ R.brew.result=null; sfx('click'); toast('🗑️ 음료를 버렸어요'); renderStation(); renderIngredients(); }
+
+/* 서빙: 정확하면 가격 + 팁 + 정확 보너스, 틀리면 만족도 감소 */
+function serve(){
+  const c = R.customers.find(x=>x.uid===R.selected);
+  if(!c || !R.brew.result) return;
+  const t = CUST_MAP[c.type], m = MENU_MAP[c.menu], g = guest(t.id);
+  const wasRegular = isRegular(t.id);
+  const anchor = document.querySelector('.order.sel') || document.getElementById('seat-'+c.uid);
+  g.visits++;
+  const ok = R.brew.result === c.menu;
+  if(ok){
+    const ratio = Math.max(0,(c.deadline-Date.now())/c.maxT);
+    const tip = Math.round(m.price * t.tip * (0.05+0.35*ratio) * (1+bonus().tip/100) * (wasRegular?1.25:1));
+    const exact = 5;
+    addIncome(m.price, `${m.n} 판매 (${t.n})`);
+    if(tip>0){ addIncome(tip, `${t.e} 팁`); S.today.tips += tip; }
+    addIncome(exact, '정확한 주문 보너스');
+    S.sales[m.id] = (S.sales[m.id]||0)+1; S.today.served++;
+    g.sat = Math.min(100, g.sat + 8 + (ratio>0.6?4:0));
+    sfx('coin'); floatAt(anchor, `+🪙${m.price+tip+exact}`);
+    toast(`${ratio>0.6?'😍':'😊'} ${t.n}: "${rand(['정말 맛있어요!','딱 제가 원하던 거예요!','또 올게요~','최고예요 💕'])}" 팁 🪙${tip}`,'good');
+    gainExp(10 + Math.round(m.price/8));
+    if(!wasRegular && isRegular(t.id)){ setTimeout(()=>{ toast(`💖 ${t.e} ${t.n} 님이 단골손님이 되었어요! (팁 +25%)`,'gold'); confetti(18); },700); }
+  } else {
+    g.sat = Math.max(0, g.sat-12); S.today.failed++;
+    sfx('bad'); toast(`😠 ${t.n}: "이건 제가 주문한 ${m.n}이(가) 아니에요!" (만족도 -12)`,'bad');
+    gainExp(2);
+  }
+  R.brew.result = null; R.hint = false;
+  bump('#coinChip'); removeCustomer(c, ok);
+  save(); renderHeader(); renderStation(); renderIngredients();
+}
+
+/* =========================================================
+   [12] 레벨 & 경험치
+   ========================================================= */
+function gainExp(n){
+  if(S.level>=MAX_LEVEL) return;
+  S.exp += n;
+  while(S.level<MAX_LEVEL && S.exp>=needExp(S.level)){
+    S.exp -= needExp(S.level); S.level++;
+    levelUp(S.level);
+  }
+  if(S.level>=MAX_LEVEL) S.exp = 0;
+  renderHeader();
+}
+function levelUp(lv){
+  const nm = MENU.filter(m=>m.lv===lv), ni = ITEMS.filter(i=>i.lv===lv), nc = CUSTOMERS.filter(c=>c.lv===lv);
+  sfx('level'); confetti(50); save();
+  setTimeout(()=>{
+    openModal(`<div class="big-emoji">🎉</div><h2>레벨 업! Lv.${lv}</h2>
+      <p>카페가 한층 더 유명해졌어요!<br>손님이 더 자주 찾아와요 🙋</p>
+      ${nm.length?`<div class="jua">🍹 새 메뉴</div><div class="unlock-list">${nm.map(m=>`<span>${m.type==='dessert'?m.emoji:'🥤'} ${m.n}</span>`).join('')}</div>`:''}
+      ${ni.length?`<div class="jua" style="margin-top:10px">🛍️ 새 인테리어</div><div class="unlock-list">${ni.map(i=>`<span>${i.e} ${i.n}</span>`).join('')}</div>`:''}
+      ${nc.length?`<div class="jua" style="margin-top:10px">👥 새 손님</div><div class="unlock-list">${nc.map(c=>`<span>${c.e} ${c.n}</span>`).join('')}</div>`:''}
+      <div class="row-btns"><button class="btn primary" onclick="closeModal();renderScreen()">좋아요! 💕</button></div>`);
+  }, 500);
+}
+
+/* =========================================================
+   [13] 메뉴 & 레시피 화면
+   ========================================================= */
+function renderMenu(){
+  const maxSale = Math.max(1, ...Object.values(S.sales));
+  const list = MENU.filter(m=>R.menuCat==='all'||m.type===R.menuCat);
+  const unlocked = unlockedMenu().length;
+  $('#screen-menu').innerHTML = `<div class="panel">
+    <h2>📖 메뉴 & 레시피 <span class="sub">해금 ${unlocked}/${MENU.length} · 레벨이 오르면 새 레시피가 열려요</span></h2>
+    <div class="filters">
+      ${[['all','전체'],['drink','🥤 음료'],['dessert','🍰 디저트']].map(([k,l])=>`<button class="filter ${R.menuCat===k?'on':''}" onclick="R.menuCat='${k}';sfx('click');renderMenu()">${l}</button>`).join('')}
+    </div>
+    <div class="cards">${list.map((m,i)=>{
+      const lock = m.lv>S.level, sold = S.sales[m.id]||0, pop = sold/maxSale*100;
+      const cost = m.ing.reduce((s,x)=>s+INGREDIENTS[x].c,0);
+      return `<div class="card ${lock?'locked':''}" style="animation-delay:${i*25}ms">
+        ${lock?`<span class="lockmsg tag gray">🔒 Lv.${m.lv}</span>`:''}
+        <div class="top">${itemIcon(m)}<div><div class="title">${m.n}</div><div class="price">🪙${m.price} <span class="muted">(원가 ${cost})</span></div></div></div>
+        <div class="recipe">${lock?'<span>❓ 레벨 '+m.lv+'에 공개</span>':m.ing.map(x=>`<span>${INGREDIENTS[x].e} ${INGREDIENTS[x].n}</span>`).join('')}</div>
+        <div class="muted">판매 ${sold}회 · 인기도 ${'★'.repeat(Math.ceil(pop/20))||'☆'}</div>
+        <div class="pop"><i style="width:${pop}%"></i></div>
+      </div>`;}).join('')}</div></div>`;
+}
+
+/* =========================================================
+   [14] 인테리어 상점 화면
+   ========================================================= */
+function fxText(fx){
+  const a=[]; if(fx.seats) a.push(`좌석 ${fx.seats}개`); if(fx.pat) a.push(`인내심 +${fx.pat}%`);
+  if(fx.tip) a.push(`팁 +${fx.tip}%`); if(fx.freq) a.push(`방문 +${fx.freq}%`);
+  return a.length?a.join(' · '):'기본 아이템';
+}
+function previewHTML(it){
+  if(it.cat==='wallpaper'||it.cat==='floor') return `<div class="shop-preview" style="background:${it.bg}"></div>`;
+  if(it.cat==='table') return `<div class="shop-preview" style="background:var(--cream2)"><div class="tbl-prev" style="background:${it.color}"></div></div>`;
+  return `<div class="shop-preview" style="background:var(--cream2)">${it.e}</div>`;
+}
+function renderShop(){
+  const cats = ['all',...Object.keys(ITEM_CATS)];
+  const list = ITEMS.filter(i=>R.shopCat==='all'||i.cat===R.shopCat);
+  $('#screen-shop').innerHTML = `<div class="panel">
+    <h2>🛍️ 인테리어 상점 <span class="sub">보유 ${S.owned.length}/${ITEMS.length} · 구매한 아이템은 카페에 바로 적용돼요</span></h2>
+    <div class="filters">${cats.map(c=>`<button class="filter ${R.shopCat===c?'on':''}" onclick="R.shopCat='${c}';sfx('click');renderShop()">${c==='all'?'✨ 전체':ITEM_CATS[c]}</button>`).join('')}</div>
+    <div class="cards">${list.map((it,i)=>{
+      const own = S.owned.includes(it.id), eq = S.equipped[it.cat]===it.id, lock = it.lv>S.level;
+      let btn;
+      if(lock) btn = `<button class="btn sm" disabled>🔒 Lv.${it.lv} 해금</button>`;
+      else if(eq) btn = OPTIONAL_CATS.includes(it.cat) ? `<button class="btn sm mint" onclick="unequip('${it.cat}')">✅ 적용 중 (해제)</button>` : `<button class="btn sm mint" disabled>✅ 적용 중</button>`;
+      else if(own) btn = `<button class="btn sm brown" onclick="equip('${it.id}')">🎨 적용하기</button>`;
+      else btn = `<button class="btn sm gold" ${S.coins<it.price?'disabled':''} onclick="buy('${it.id}')">🪙${fmt(it.price)} 구매</button>`;
+      return `<div class="card ${lock?'locked':''}" style="animation-delay:${i*20}ms">
+        ${previewHTML(it)}
+        <div class="title">${it.e} ${it.n}</div>
+        <div><span class="tag">${ITEM_CATS[it.cat]}</span> ${own?'<span class="tag mint">보유</span>':''}</div>
+        <div class="muted">${fxText(it.fx)}</div>${btn}</div>`;}).join('')}</div></div>`;
+}
+function buy(id){
+  const it = ITEM_MAP[id];
+  if(S.owned.includes(id) || it.lv>S.level) return;
+  if(S.coins < it.price){ toast('🪙 코인이 부족해요!','bad'); sfx('bad'); return; }
+  addExpense(it.price, `인테리어: ${it.n}`);
+  S.owned.push(id); S.equipped[it.cat] = id;
+  sfx('buy'); toast(`🎀 ${it.e} ${it.n}을(를) 카페에 들였어요!`,'gold'); confetti(14);
+  if(it.cat==='table') clampSeats();
+  save(); renderHeader(); renderShop(); bump('#coinChip');
+}
+function equip(id){
+  const it = ITEM_MAP[id]; if(!S.owned.includes(id)) return;
+  S.equipped[it.cat] = id; sfx('click'); toast(`🎨 ${it.n} 적용 완료!`,'good');
+  if(it.cat==='table') clampSeats();
+  save(); renderShop();
+}
+function unequip(cat){ S.equipped[cat]=null; sfx('click'); toast('장식을 해제했어요'); save(); renderShop(); }
+// 좌석 수가 줄어든 경우 넘치는 손님은 정중히 돌려보냄 (패널티 없음)
+function clampSeats(){
+  const seats = bonus().seats;
+  R.customers = R.customers.filter(c=>c.seat<seats);
+  if(!R.customers.some(c=>c.uid===R.selected)) R.selected = R.customers[0]?.uid ?? null;
+}
+
+/* =========================================================
+   [15] 매출 & 정산 화면
+   ========================================================= */
+function renderSales(){
+  const t = S.today, net = S.totalRevenue - S.totalExpense;
+  const top = MENU.filter(m=>S.sales[m.id]).sort((a,b)=>S.sales[b.id]-S.sales[a.id]).slice(0,8);
+  const maxS = Math.max(1,...top.map(m=>S.sales[m.id]));
+  $('#screen-sales').innerHTML = `
+  <div class="sales-top">
+    <div class="money in"><div class="k muted">누적 매출</div><div class="v">🪙${fmt(S.totalRevenue)}</div></div>
+    <div class="money out"><div class="k muted">누적 지출</div><div class="v">🪙${fmt(S.totalExpense)}</div></div>
+    <div class="money net"><div class="k muted">누적 순이익</div><div class="v">${net>=0?'+':''}${fmt(net)}</div></div>
+    <div class="money"><div class="k muted">총 판매량</div><div class="v">${Object.values(S.sales).reduce((a,b)=>a+b,0)}잔</div></div>
+  </div>
+  <div class="two-col">
+    <div class="panel">
+      <h2>📅 오늘 (${t.day}일차) ${R.open?'<span class="tag mint">영업 중</span>':'<span class="tag gray">준비 중</span>'}</h2>
+      <table><tr><th>매출</th><th>팁</th><th>지출</th><th>순이익</th></tr>
+      <tr><td>🪙${fmt(t.revenue)}</td><td>🪙${fmt(t.tips)}</td><td>🪙${fmt(t.expense)}</td><td><b>${fmt(t.revenue-t.expense)}</b></td></tr></table>
+      <p class="muted" style="margin:10px 0">방문 ${t.visitors}명 · 성공 ${t.served} · 실패 ${t.failed}</p>
+      ${R.open?`<button class="btn primary" onclick="closeShop()">🌙 영업 마감하고 정산하기</button>`:`<button class="btn primary" onclick="openShop()">☀️ 영업 시작</button>`}
+      <h2 style="margin-top:18px">🗓️ 지난 영업 기록</h2>
+      ${S.history.length?`<table><tr><th>일차</th><th>매출</th><th>지출</th><th>순익</th><th>손님</th></tr>
+        ${S.history.slice(0,10).map(h=>`<tr><td>${h.day}일</td><td>${fmt(h.revenue)}</td><td>${fmt(h.expense)}</td><td style="color:${h.revenue-h.expense>=0?'#2e9d63':'#e2556a'}">${fmt(h.revenue-h.expense)}</td><td>${h.served}/${h.visitors}</td></tr>`).join('')}</table>`
+        :'<div class="empty-box">아직 마감한 영업일이 없어요</div>'}
+    </div>
+    <div class="panel">
+      <h2>🏆 인기 메뉴 TOP 8</h2>
+      ${top.length?`<div class="bars">${top.map(m=>`<div class="row"><span class="lbl">${m.type==='dessert'?m.emoji:'🥤'} ${m.n}</span><span class="bar"><i style="width:${S.sales[m.id]/maxS*100}%"></i></span><b>${S.sales[m.id]}</b></div>`).join('')}</div>`
+        :'<div class="empty-box">아직 판매 기록이 없어요</div>'}
+      <h2 style="margin-top:18px">🧾 최근 거래 내역</h2>
+      <div class="ledger">${S.ledger.length?S.ledger.map(l=>`<div class="li"><span>${l.day}일 · ${esc(l.label)}</span><span class="${l.type==='in'?'plus':'minus'}">${l.type==='in'?'+':'-'}${fmt(l.amount)}</span></div>`).join(''):'<div class="empty-box">거래 내역이 없어요</div>'}</div>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   [16] 손님 목록 화면 (만족도 & 단골)
+   ========================================================= */
+function renderGuests(){
+  const regulars = CUSTOMERS.filter(c=>isRegular(c.id)).length;
+  $('#screen-guests').innerHTML = `<div class="panel">
+    <h2>👥 손님 도감 <span class="sub">단골 ${regulars}명 · 5회 이상 방문 + 만족도 70 이상이면 단골이 돼요 (팁 +25%, 인내심 +20%)</span></h2>
+    <div class="cards">${CUSTOMERS.map((c,i)=>{
+      const lock = c.lv>S.level, g = S.guests[c.id]||{visits:0,sat:50}, reg = isRegular(c.id);
+      const col = g.sat>=70?'#4fd18b':g.sat>=40?'#f5b942':'#ff6b6b';
+      return `<div class="card ${lock?'locked':''}" style="animation-delay:${i*30}ms">
+        ${lock?`<span class="lockmsg tag gray">🔒 Lv.${c.lv}</span>`:reg?'<span class="lockmsg tag gold">💖 단골</span>':''}
+        <div class="top"><span style="font-size:46px">${lock?'❔':c.e}</span><div><div class="title">${lock?'???':c.n}</div><div class="muted">${lock?'레벨을 올리면 찾아와요':c.p}</div></div></div>
+        ${lock?'':`<div class="muted">좋아하는 메뉴</div>
+        <div class="recipe">${c.fav.map(f=>{const m=MENU_MAP[f];return `<span>${m.lv<=S.level?(m.type==='dessert'?m.emoji:'🥤')+' '+m.n:'🔒 ???'}</span>`}).join('')}</div>
+        <div class="muted">방문 ${g.visits}회 · 인내심 ${c.pat}초 · 팁 x${c.tip}</div>
+        <div class="muted">만족도 ${g.sat}/100</div><div class="satbar"><i style="width:${g.sat}%;background:${col}"></i></div>`}
+      </div>`;}).join('')}</div></div>`;
+}
+
+/* =========================================================
+   [17] 설정 / 시작 화면 / 초기화
+   ========================================================= */
+function openSettings(){
+  sfx('click');
+  openModal(`<h2>⚙️ 카페 설정</h2>
+    <div class="setting-row"><span>☕ 카페 이름</span></div>
+    <input type="text" id="nameInput" maxlength="14" value="${esc(S.cafeName)}">
+    <div class="row-btns"><button class="btn primary sm" onclick="rename()">이름 변경</button></div>
+    <div class="setting-row"><span>${S.muted?'🔇':'🔊'} 효과음</span><button class="btn sm ${S.muted?'ghost':'mint'}" onclick="toggleMute();openSettings()">${S.muted?'꺼짐':'켜짐'}</button></div>
+    <div class="setting-row"><span>💾 저장</span><span class="muted">자동 저장 중이에요</span></div>
+    <div class="setting-row"><span>🔄 처음부터 다시 시작</span><button class="btn sm" style="background:#ffe0e0;color:#c23b4f" onclick="confirmReset()">초기화</button></div>
+    <div class="row-btns"><button class="btn ghost" onclick="closeModal()">닫기</button></div>`);
+}
+function rename(){
+  const v = $('#nameInput').value.trim();
+  if(!v){ toast('이름을 입력해주세요','bad'); return; }
+  S.cafeName = v; save(); renderHeader(); renderScreen(); closeModal(); toast(`🍓 "${v}"(으)로 이름을 바꿨어요!`,'good');
+}
+function confirmReset(){
+  openModal(`<div class="big-emoji">⚠️</div><h2>정말 초기화할까요?</h2>
+    <p>코인, 레벨, 인테리어, 손님 기록 등<br>모든 진행 상황이 사라져요.</p>
+    <div class="row-btns"><button class="btn ghost" onclick="openSettings()">취소</button><button class="btn primary" onclick="resetGame()">초기화하기</button></div>`);
+}
+function resetGame(){
+  localStorage.removeItem(SAVE_KEY);
+  const muted = S.muted; S = newState(); S.muted = muted;
+  Object.assign(R,{open:false,customers:[],selected:null,brew:{picked:[],result:null,brewing:false},hint:false});
+  renderHeader(); go('cafe'); showWelcome();
+}
+function showWelcome(){
+  openModal(`<div class="big-emoji">🍓</div><h2>나만의 카페 운영 게임</h2>
+    <p>손님의 주문을 받고, 재료를 골라 음료와 디저트를 만들어<br>나만의 핑크 디저트 카페를 키워보세요!</p>
+    <p class="muted">카페 이름을 정해주세요</p>
+    <input type="text" id="startName" maxlength="14" value="${esc(S.cafeName)}">
+    <div class="row-btns"><button class="btn primary big" onclick="startGame()">🎮 게임 시작</button></div>`, false);
+}
+function startGame(){
+  const v = $('#startName').value.trim(); if(v) S.cafeName = v;
+  S.started = true; save(); closeModal(); sfx('level'); confetti(30);
+  renderHeader(); renderScreen();
+  setTimeout(()=>toast('☀️ "영업 시작"을 눌러 첫 손님을 맞이해보세요!','gold'), 600);
+}
+
+/* =========================================================
+   [18] 초기화 & 루프 시작
+   ========================================================= */
+load();
+renderHeader(); renderScreen();
+if(!S.started) showWelcome();
+else toast(`💕 다시 오신 걸 환영해요! ${S.today.day}일차 영업을 준비해요`,'good');
+setInterval(()=>{ tick(); }, 250);
+setInterval(()=>{ if(R.open) renderHeader(); }, 1000);
+</script>
+</body>
+</html>
